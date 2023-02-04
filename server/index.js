@@ -1,29 +1,23 @@
-const express = require("express");
-const cors = require("cors");
-const app = express();
 const mysql = require("mysql");
 
-app.use(cors());
-app.use(express.json());
-app.use(function (req, res, next) {
-
-    // Website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
-
-    // Request methods you wish to allow
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-    // Request headers you wish to allow
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-    // Set to true if you need the website to include cookies in the requests sent
-    // to the API (e.g. in case you use sessions)
-    res.setHeader('Access-Control-Allow-Credentials', true);
-
-    // Pass to next layer of middleware
-    next();
-});
-
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const allowedOrigins = ["http://localhost:3000", "http://172.22.144.1:3000"];
+var corsOptionsDelegate = (req, callback) => {
+    var corsOptions;
+    console.log(req.header('Origin'));
+    if (allowedOrigins.indexOf(req.header('Origin')) !== -1) {
+        corsOptions = { origin: true };
+    }
+    else {
+        corsOptions = { origin: false };
+    }
+    callback(null, corsOptions);
+};
+exports.cors = cors();
+exports.corsWithOptions = cors(corsOptionsDelegate);
+app.use(cors(corsOptionsDelegate));
 const db = mysql.createConnection({
     user: "root",
     host: "localhost",
@@ -39,7 +33,7 @@ app.post("/test", (req, res) => {
         "SELECT * FROM users where user_name=?;",
         username,
         (err, result) => {
-            console.log(err);
+            // console.log(err);
             res.send(result)
         }
     );
